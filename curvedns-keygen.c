@@ -75,36 +75,39 @@ int curvedns_env(char *path, char *name) {
 	struct stat st;
 
 	if (strlen(name) > 200) {
-		fprintf(stderr, "authoritative name server name too long\n");
+		fprintf(stderr, "Authoritative name server name too long.\n");
 		return 1;
 	}
 	if (snprintf(fullname, sizeof(fullname), "%s.%s", dnspublic, name) < 0) return 1;
-	printf("Authoritative name server name:\t%s\n", fullname);
 
 	if (snprintf(fullpath, sizeof(fullpath), "%s/env", path) < 0) return 1;
 	if (stat(fullpath, &st) < 0) {
-		if (errno != ENOENT)
-			return 1;
+		if (errno != ENOENT) return 1;
 		mkdir(fullpath, 0700);
 	} else {
 		if (!S_ISDIR(st.st_mode)) {
-			fprintf(stderr, "%s is not a directory, remove first\n", fullpath);
+			fprintf(stderr, "%s is not a directory, remove this first\n", fullpath);
 			return 1;
 		}
 	}
 
 	if (snprintf(fullpath, sizeof(fullpath), "%s/env/CURVEDNS_PRIVATE_KEY", path) < 0) return 1;
+	if (stat(fullpath, &st) == 0) {
+		fprintf(stderr, "A private key file already exists, remove that first.\n");
+		return 1;
+	}
 	f = fopen(fullpath, "w");
 	if (!f) {
-		fprintf(stderr, "unable to open %s for writing\n", fullpath);
+		fprintf(stderr, "Unable to open %s for writing.\n", fullpath);
 		return 1;
 	}
 	fprintf(f, "%s\n", hexprivate);
 	fclose(f);
 	if (chmod(fullpath, 0400) != 0) return 1;
 
-	printf("Hex public key:\t\t%s\n", hexpublic);
-	printf("Hex secret key:\t\t%s\n", hexprivate);
+	printf("Authoritative name server name:\n%s\n", fullname);
+	printf("Hex public key:\n%s\n", hexpublic);
+	printf("Hex secret key:\n%s\n", hexprivate);
 	printf("\n");
 	printf("The private key was written to %s, so it can be used inside CurveDNS environment.\n", fullpath);
 

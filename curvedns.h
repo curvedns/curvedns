@@ -37,7 +37,7 @@
 #ifndef CURVEDNS_H_
 #define CURVEDNS_H_
 
-#define CURVEDNS_VERSION	"0.99"
+#define CURVEDNS_VERSION	"0.86"
 
 #include <stdio.h>
 #include <stdlib.h>
