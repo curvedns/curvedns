@@ -85,10 +85,10 @@ int curvedns_env(char *path, char *name) {
 	if (stat(fullpath, &st) < 0) {
 		if (errno != ENOENT)
 			return 1;
-		mkdir(fullpath, 0755);
+		mkdir(fullpath, 0700);
 	} else {
 		if (!S_ISDIR(st.st_mode)) {
-			fprintf(stderr, "%s is not a directory, remove this first\n", fullpath);
+			fprintf(stderr, "%s is not a directory, remove first\n", fullpath);
 			return 1;
 		}
 	}
@@ -101,11 +101,12 @@ int curvedns_env(char *path, char *name) {
 	}
 	fprintf(f, "%s\n", hexprivate);
 	fclose(f);
+	if (chmod(fullpath, 0400) != 0) return 1;
 
 	printf("Hex public key:\t\t%s\n", hexpublic);
 	printf("Hex secret key:\t\t%s\n", hexprivate);
 	printf("\n");
-	printf("The private key was also written to %s, so it can be used inside CurveDNS environment.\n", fullpath);
+	printf("The private key was written to %s, so it can be used inside CurveDNS environment.\n", fullpath);
 
 	return 0;
 }
