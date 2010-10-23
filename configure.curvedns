@@ -1,0 +1,86 @@
+#!/bin/sh
+
+start="`pwd`"
+top="`pwd`/nacl/build"
+bin="$top/bin"
+lib="$top/lib"
+include="$top/include"
+work="$top/work"
+curve="$work/curvedns"
+
+PATH="/usr/local/bin:$PATH"
+PATH="/usr/sfw/bin:$PATH"
+PATH="$bin:$PATH"
+export PATH
+
+# ------------------- NaCl stuff
+
+if [ ! -d "$bin" -o ! -d "$work" ]; then
+  echo "No NaCl build that is ready for deployment yet, did you run 'configure.nacl'?"
+  exit 1
+fi
+
+if [ -f "$curve"/abi -o -f "$curve"/compiler -o -f "$curve"/cflags ]; then
+  echo "You have already picked an ABI, compiler, or -options for CurveDNS:"
+  [ -f "$curve"/abi ] && echo -n "ABI:			"; cat "$curve"/abi
+  [ -f "$curve"/compiler ] && echo -n "Compiler:		"; cat "$curve"/compiler
+  [ -f "$curve"/cflags ] && echo -n "Compiler options:	"; cat "$curve"/cflags
+  echo
+  echo "If you want to change this, remove the following directory:"
+  echo "$curve"
+  exit 1
+fi
+
+rm -rf "$curve"
+mkdir "$curve"
+
+cd "$bin"
+
+# Saving intermediate result in a file, because subprocesses (okabi opens a pipe) kill local vars:
+okabi \
+| while read abi
+do
+  echo "$abi" > "$curve"/lastabi
+done
+
+abis=`okabi | wc -l`
+lastabi=`cat "$curve"/lastabi`
+
+rm -f "$curve"/*
+
+if [ "$abis" -gt 1 -a -z "$1" ]; then
+  echo "There are more than one application binary interfaces generated for your "
+  echo "system, which one do you want to use for CurveDNS?"
+  select abi in $(okabi); do
+    if [ -n "$abi" ]; then break; fi
+  done
+  echo $abi > "$curve"/abi
+else
+  echo "$lastabi" > "$curve"/abi
+fi
+
+abi=`cat "$curve"/abi`
+compiler=`okc-$abi | tail -1 | cut -d' ' -f1`
+cflags=`okc-$abi | tail -1 | cut -d' ' -f2-`
+
+echo "$compiler" > "$curve"/compiler
+echo "$cflags" > "$curve"/cflags
+
+# --------------------- Regular configure stuff
+
+cd "$start"
+
+sed -e "s/@ABI@/$abi/g" \
+    -e "s/@CC@/$compiler/" \
+    -e "s/@CFLAGS@/$cflags/" \
+        Makefile.in > Makefile
+
+echo "Finished configuring CurveDNS, ready for compiling."
+echo -n "Chosen/picked ABI:		"
+cat "$curve"/abi
+echo -n "Chosen/picked compiler:		"
+cat "$curve"/compiler
+echo -n "Chosen/picked compiler options:	"
+cat "$curve"/cflags
+echo
+echo "We are now ready to compile, run 'make' to do so."

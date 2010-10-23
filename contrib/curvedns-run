@@ -1,0 +1,17 @@
+#!/bin/sh
+
+USER="curvedns"
+
+# IPs to listen on (separated by comma):
+LISTEN_IPS="0.0.0.0"
+
+# Port to listen on (root is needed if port < 1024):
+LISTEN_PORT="53"
+
+# Authoritative name server (target) IP:
+TARGET_IP="127.0.0.1"
+
+# Authoritative name server port:
+TARGET_PORT="53"
+
+exec envuidgid "$USER" envdir env curvedns "$LISTEN_IPS" "$LISTEN_PORT" "$TARGET_IP" "$TARGET_PORT" 2>&1

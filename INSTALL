@@ -1,0 +1,17 @@
+                  CurveDNS INSTALL
+=====================================================
+
+For the latest and detailed installation instructions 
+see http://curvedns.on2it.net/docs#install
+
+
+
+For people in a hurry, a (very) short instruction:
+
+ 1) Be sure to have libev (+ dev headers) installed
+ 2) ./configure.nacl      -- takes a while
+ 3) ./configure.curvedns  -- answer possible questions
+ 4) make
+ 5) Copy both curvedns and curvedns-keygen to your 
+      preferred path.
+
