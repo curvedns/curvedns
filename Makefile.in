@@ -75,4 +75,4 @@ curvedns: debug.o misc.o cache.a event.a ip.o dnscurve.o dns.o curvedns.o
 	$(CC) $(LDFLAGS) debug.o misc.o ip.o dnscurve.o dns.o cache.a event.a curvedns.o $(EXTRALIB) -lnacl -o curvedns
 
 curvedns-keygen: curvedns-keygen.o debug.o misc.o
-	$(CC) $(LDFLAGS) curvedns-keygen.o debug.o misc.o $(EXTRALIB) -lnacl -o curvedns-keygen
+	$(CC) $(LDFLAGS) curvedns-keygen.o debug.o misc.o -lnacl -o curvedns-keygen

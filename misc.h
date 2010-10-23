@@ -45,7 +45,6 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <ev.h>
 #include "debug.h"
 
 extern int misc_getenv_int(const char *, int, int *);
@@ -64,6 +63,6 @@ extern void misc_randombytes(uint8_t *, unsigned long long);
 
 extern int misc_crypto_random_init();
 extern unsigned int misc_crypto_random(unsigned int);
-extern void misc_crypto_nonce(uint8_t *, struct ev_loop *);
+extern void misc_crypto_nonce(uint8_t *, void *, int);
 
 #endif /* MISC_H_ */

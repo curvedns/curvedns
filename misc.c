@@ -207,23 +207,20 @@ unsigned int misc_crypto_random(unsigned int n) {
 	return out[--outleft] % n;
 }
 
-// XXX: make this function libev-less
 // Make sure sizeof(nonce) >= 12
-void misc_crypto_nonce(uint8_t *nonce, struct ev_loop *loop) {
+void misc_crypto_nonce(uint8_t *nonce, void *time, int len) {
 	// We would like the first 64 bits to be time based.
 	// The last 32 bits can be random.
 
 	// XXX: but dirty solution, nicer way?
-	ev_tstamp time = ev_now(loop);
-	int i = sizeof(ev_tstamp);
-	if (i < 8) {
-		memcpy(nonce, &time, i);
+	if (len < 8) {
+		memcpy(nonce, time, len);
 	} else {
-		memcpy(nonce, &time, 8);
-		i = 8;
+		memcpy(nonce, time, 8);
+		len = 8;
 	}
-	for ( ; i < 12; i++)
-		nonce[i] = misc_crypto_random(256);
+	for ( ; len < 12; len++)
+		nonce[len] = misc_crypto_random(256);
 }
 
 static const uint8_t kValues[] = {

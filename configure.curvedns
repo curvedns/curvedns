@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+
+# XXX: make it POSIX-shell compatible (select isn't)
 
 start="`pwd`"
 top="`pwd`/nacl/build"
@@ -15,12 +17,12 @@ export PATH
 
 # ------------------- NaCl stuff
 
-if [ ! -d "$bin" -o ! -d "$work" ]; then
+if [ ! -d "$bin" ] || [ ! -d "$work" ]; then
   echo "No NaCl build that is ready for deployment yet, did you run 'configure.nacl'?"
   exit 1
 fi
 
-if [ -f "$curve"/abi -o -f "$curve"/compiler -o -f "$curve"/cflags ]; then
+if [ -f "$curve"/abi ] || [ -f "$curve"/compiler ] || [ -f "$curve"/cflags ]; then
   echo "You have already picked an ABI, compiler, or -options for CurveDNS:"
   [ -f "$curve"/abi ] && echo -n "ABI:			"; cat "$curve"/abi
   [ -f "$curve"/compiler ] && echo -n "Compiler:		"; cat "$curve"/compiler
@@ -48,7 +50,7 @@ lastabi=`cat "$curve"/lastabi`
 
 rm -f "$curve"/*
 
-if [ "$abis" -gt 1 -a -z "$1" ]; then
+if [ "$abis" -gt 1 ]; then
   echo "There are more than one application binary interfaces generated for your "
   echo "system, which one do you want to use for CurveDNS?"
   select abi in $(okabi); do
