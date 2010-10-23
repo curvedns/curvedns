@@ -15,6 +15,15 @@ PATH="/usr/sfw/bin:$PATH"
 PATH="$bin:$PATH"
 export PATH
 
+# ------------------- funcs
+
+doMakefile() {
+  sed -e "s/@ABI@/$abi/g" \
+      -e "s/@CC@/$compiler/" \
+      -e "s/@CFLAGS@/$cflags/" \
+          Makefile.in > Makefile
+}
+
 # ------------------- NaCl stuff
 
 if [ ! -d "$bin" ] || [ ! -d "$work" ]; then
@@ -24,12 +33,21 @@ fi
 
 if [ -f "$curve"/abi ] || [ -f "$curve"/compiler ] || [ -f "$curve"/cflags ]; then
   echo "You have already picked an ABI, compiler, or -options for CurveDNS:"
-  [ -f "$curve"/abi ] && echo -n "ABI:			"; cat "$curve"/abi
-  [ -f "$curve"/compiler ] && echo -n "Compiler:		"; cat "$curve"/compiler
-  [ -f "$curve"/cflags ] && echo -n "Compiler options:	"; cat "$curve"/cflags
+  [ -f "$curve"/abi ] && ( echo -n "ABI:			"; cat "$curve"/abi )
+  [ -f "$curve"/compiler ] && ( echo -n "Compiler:		"; cat "$curve"/compiler )
+  [ -f "$curve"/cflags ] && ( echo -n "Compiler options:	"; cat "$curve"/cflags )
   echo
-  echo "If you want to change this, remove the following directory:"
+  echo "If you want to change this, remove the following directory and rerun:"
   echo "$curve"
+  if [ -f "$curve"/abi ] && [ -f "$curve"/compiler ] && [ -f "$curve"/cflags ]; then
+    echo
+    echo "Nevertheless, a new Makefile has been generated."
+    abi=`cat "$curve"/abi`
+    compiler=`cat "$curve"/compiler`
+    cflags=`cat "$curve"/cflags`
+    doMakefile
+    exit 0
+  fi
   exit 1
 fi
 
@@ -72,10 +90,7 @@ echo "$cflags" > "$curve"/cflags
 
 cd "$start"
 
-sed -e "s/@ABI@/$abi/g" \
-    -e "s/@CC@/$compiler/" \
-    -e "s/@CFLAGS@/$cflags/" \
-        Makefile.in > Makefile
+doMakefile
 
 echo "Finished configuring CurveDNS, ready for compiling."
 echo -n "Chosen/picked ABI:		"

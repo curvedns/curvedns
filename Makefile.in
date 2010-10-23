@@ -1,9 +1,13 @@
+# CurveDNS' Makefile template
+#
+# The @VAR@ tokens will be replaced by configure.curvedns
+
 ABI=@ABI@
 NACLLIB=nacl/build/lib/$(ABI)
 NACLINC=nacl/build/include/$(ABI)
-CDNSCFLAGS=-Wall -fno-strict-aliasing -I$(NACLINC)
+CDNSCFLAGS=-Wall -fno-strict-aliasing -O3 -I$(NACLINC)
 
-# If you have libev at a non-standard place, please specify that here:
+# If you have libev at a non-standard place, specify that here:
 #EV=
 #EVCFLAGS=-I$(EV)/include
 #EVLDFLAGS=-L$(EV)/lib
@@ -11,18 +15,22 @@ CDNSCFLAGS=-Wall -fno-strict-aliasing -I$(NACLINC)
 CC=@CC@
 CFLAGS=@CFLAGS@ $(CDNSCFLAGS) $(EVCFLAGS)
 LDFLAGS=-L$(NACLLIB) $(EVLDFLAGS)
-EXTRALIB=-lev
 
 # do not edit below
 
+EXTRALIB=-lev
+
 TARGETS=curvedns-keygen curvedns
 
-.PHONY: clean targets install
+.PHONY: targets clean distclean install
 
 targets: $(TARGETS)
 
 clean:
 	rm -f *.a *.o $(TARGETS)
+
+distclean: clean
+	rm -f Makefile
 
 install:
 	@echo Sorry, no automated install. Copy the following binaries to your preferred destination path:
