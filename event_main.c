@@ -50,7 +50,14 @@ void event_cleanup_entry(struct ev_loop *loop, event_entry_t *entry) {
 	struct event_general_entry *general_entry;
 	if (entry) {
 		general_entry = &entry->general;
-
+		if (general_entry->dns.qname) {
+			free(general_entry->dns.qname);
+			general_entry->dns.qname = NULL;
+		}
+		if (general_entry->buffer) {
+			free(general_entry->buffer);
+			general_entry->buffer = NULL;
+		}
 		if (general_entry->protocol == IP_PROTOCOL_UDP) {
 			event_cleanup_udp_entry(loop, &entry->udp);
 		} else if (general_entry->protocol == IP_PROTOCOL_TCP) {

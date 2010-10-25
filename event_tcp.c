@@ -55,14 +55,6 @@ void event_cleanup_tcp_entry(struct ev_loop *loop, struct event_tcp_entry *entry
 			ip_tcp_close(entry->intsock);
 			entry->intsock = -1;
 		}
-		if (entry->dns.qname) {
-			free(entry->dns.qname);
-			entry->dns.qname = NULL;
-		}
-		if (entry->buffer) {
-			free(entry->buffer);
-			entry->buffer = NULL;
-		}
 		if (event_tcp_number_connections-- == global_ip_tcp_max_number_connections)
 			event_tcp_startstop_watchers(loop, 1);
 		free(entry);

@@ -45,14 +45,6 @@ void event_cleanup_udp_entry(struct ev_loop *loop, struct event_udp_entry *entry
 			close(entry->read_int_watcher.fd);
 		if (ev_is_active(&entry->timeout_int_watcher))
 			ev_timer_stop(loop, &entry->timeout_int_watcher);
-		if (entry->dns.qname) {
-			free(entry->dns.qname);
-			entry->dns.qname = NULL;
-		}
-		if (entry->buffer) {
-			free(entry->buffer);
-			entry->buffer = NULL;
-		}
 		free(entry);
 	}
 }
@@ -76,11 +68,13 @@ void event_udp_timeout_cb(struct ev_loop *loop, ev_timer *w, int revent) {
 	ev_io_stop(loop, &entry->read_int_watcher);
 	ev_timer_stop(loop, &entry->timeout_int_watcher);
 
-	if (entry->read_int_watcher.fd >= 0)
+	if (entry->read_int_watcher.fd >= 0) {
 		close(entry->read_int_watcher.fd);
+		entry->read_int_watcher.fd = -1;
+	}
 
 	if (!dns_forward_query_udp(general_entry)) {
-		debug_log(DEBUG_WARN, "event_udp_timeout_cb(): unable to resent query to authoritative server\n");
+		debug_log(DEBUG_WARN, "event_udp_timeout_cb(): unable to resend query to authoritative server\n");
 		goto wrong;
 	}
 
@@ -129,8 +123,10 @@ void event_udp_int_cb(struct ev_loop *loop, ev_io *w, int revent) {
 	entry->packetsize = n;
 
 	// We can also close the socket towards the authoritative name server, as we are done:
-	if (entry->read_int_watcher.fd)
+	if (entry->read_int_watcher.fd) {
 		close(entry->read_int_watcher.fd);
+		entry->read_int_watcher.fd = -1;
+	}
 
 	// Check if the response really came from our target server:
 	if (ip_compare_address(&addr, &global_target_address) != 0) {
