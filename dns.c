@@ -35,6 +35,7 @@
  */
 
 #include "dns.h"
+#include "misc.h"
 #include "dnscurve.h"
 
 // From Matthew Demspky's prototype code

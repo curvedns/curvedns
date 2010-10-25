@@ -37,6 +37,7 @@
 #include <sys/socket.h>		/* for AF_UNSPEC */
 
 #include "curvedns.h"
+#include "misc.h"
 #include "ip.h"
 #include "event.h"
 #include "dnscurve.h"

@@ -35,6 +35,7 @@
  */
 
 #include "dnscurve.h"
+#include "misc.h"
 #include "curvedns.h"
 #include "dns.h"
 #include "cache_hashtable.h"
