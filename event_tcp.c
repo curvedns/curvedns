@@ -360,7 +360,6 @@ void event_tcp_read_cb(struct ev_loop *loop, ev_io *w, int revent) {
 	return;
 
 wrong:
-	debug_log(DEBUG_WARN, "event_tcp_read_cb(): received wrong somewhere along the chain\n");
 	event_cleanup_entry(loop, general_entry);
 	return;
 }
