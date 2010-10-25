@@ -124,7 +124,7 @@ int dns_forward_query_udp(event_entry_t *general_entry) {
 	n = sendto(sock, entry->buffer, entry->packetsize, MSG_DONTWAIT,
 			(struct sockaddr *) &global_target_address.sa, global_target_address_len);
 	if (n == -1) {
-		debug_log(DEBUG_ERROR, "dns_forward_query_udp(): unable to send the response (%s)\n", strerror(errno));
+		debug_log(DEBUG_ERROR, "dns_forward_query_udp(): unable to forward the query (%s)\n", strerror(errno));
 		goto wrong;
 	}
 
@@ -178,7 +178,7 @@ int dns_analyze_reply_query(event_entry_t *general_entry) {
 	// Check the received id with the one we sent:
 	recvtxid = (entry->buffer[0] << 8) + entry->buffer[1];
 	if (entry->dns.dsttxid != recvtxid) {
-		debug_log(DEBUG_INFO, "dns_analyze_reply_query(): received txid differs!\n");
+		debug_log(DEBUG_WARN, "dns_analyze_reply_query(): received txid differ!\n");
 		goto wrong;
 	}
 
@@ -224,8 +224,10 @@ int dns_reply_query_udp(event_entry_t *general_entry) {
 
 	n = sendto(entry->sock->fd, entry->buffer, entry->packetsize, MSG_DONTWAIT,
 			(struct sockaddr *) &entry->address, addresslen);
-	if (n == -1)
-		return 0;
+	if (n == -1) {
+		debug_log(DEBUG_ERROR, "dns_reply_query_udp(): unable to send the response to the client (%s)\n", strerror(errno));
+		goto wrong;
+	}
 
 	return 1;
 
