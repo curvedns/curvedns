@@ -31,7 +31,7 @@ if [ ! -d "$bin" ] || [ ! -d "$work" ]; then
   exit 1
 fi
 
-if [ -z "$1"] && ([ -f "$curve"/abi ] || [ -f "$curve"/compiler ] || [ -f "$curve"/cflags ]); then
+if [ -z "$1" ] && ([ -f "$curve"/abi ] || [ -f "$curve"/compiler ] || [ -f "$curve"/cflags ]); then
   echo "You have already picked an ABI, compiler, or -options for CurveDNS:"
   [ -f "$curve"/abi ] && ( echo -n "ABI:			"; cat "$curve"/abi )
   [ -f "$curve"/compiler ] && ( echo -n "Compiler:		"; cat "$curve"/compiler )
@@ -75,14 +75,20 @@ if [ "$abis" -gt 1 ] && [ -z "$1" ]; then
     if [ -n "$abi" ]; then break; fi
   done
   echo $abi > "$curve"/abi
-else if [ "$abis" -gt 1 ] && [ ! -z "$1" ]; then
-  # XXX: check if ABI indeed exists
+elif [ "$abis" -gt 1 ] && [ ! -z "$1" ]; then
   echo "$1" > "$curve"/abi
 else
   echo "$lastabi" > "$curve"/abi
 fi
 
 abi=`cat "$curve"/abi`
+
+if [ ! -f "okc-$abi" ]; then
+  echo "Did not find any suitable compiler for this ABI, does the $abi ABI exist?"
+  rm -rf "$curve"
+  exit 1
+fi
+
 compiler=`okc-$abi | tail -1 | cut -d' ' -f1`
 cflags=`okc-$abi | tail -1 | cut -d' ' -f2-`
 
