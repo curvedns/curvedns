@@ -34,7 +34,10 @@
  * $Revision$
  */
 
+#include <sys/socket.h>		/* for AF_UNSPEC */
+
 #include "curvedns.h"
+#include "ip.h"
 #include "event.h"
 #include "dnscurve.h"
 
@@ -53,6 +56,7 @@ static int usage(const char *argv0) {
 	debug_log(DEBUG_FATAL, " CURVEDNS_PRIVATE_KEY\n\tThe hexidecimal representation of the server's private (secret) key\n");
 	debug_log(DEBUG_FATAL, " UID\n\tNon-root user id to run under\n");
 	debug_log(DEBUG_FATAL, " GID\n\tNon-root user group id to run under\n");
+	debug_log(DEBUG_FATAL, " [CURVEDNS_SOURCE_IP]\n\tThe IP to bind on when target server is contacted (default: [none])\n");
 	debug_log(DEBUG_FATAL, " [CURVEDNS_INTERNAL_TIMEOUT]\n\tNumber of seconds to declare target server timeout (default: 1.2)\n");
 	debug_log(DEBUG_FATAL, " [CURVEDNS_UDP_TRIES]\n\tWhen timeout to target server, how many tries in total (default: 2)\n");
 	debug_log(DEBUG_FATAL, " [CURVEDNS_TCP_NUMBER]\n\tNumber of simultaneous TCP connections allowed (default: 25)\n");
@@ -62,9 +66,28 @@ static int usage(const char *argv0) {
 	return 1;
 }
 
-static void getenvoptions() {
+static int getenvoptions() {
 	int tmpi;
 	double tmpd;
+	char ip[INET6_ADDRSTRLEN];
+
+	global_source_address.sa.sa_family = AF_UNSPEC;
+	tmpi = misc_getenv_ip("CURVEDNS_SOURCE_IP", 0, &global_source_address);
+	if (tmpi < 0) {
+		debug_log(DEBUG_FATAL, "$CURVEDNS_SOURCE_IP is not a correct IP address\n");
+		return 0;
+	} else if (tmpi) {
+		if (global_target_address.sa.sa_family != global_source_address.sa.sa_family) {
+			debug_log(DEBUG_FATAL, "IP address of $CURVEDNS_SOURCE_IP is not in the same family as the target address\n");
+			return 0;
+		}
+		if (!ip_address_string(&global_source_address, ip, sizeof(ip)))
+			return 0;
+		debug_log(DEBUG_FATAL, "source IP address: %s\n", ip);
+	} else {
+		global_source_address
+		debug_log(DEBUG_INFO, "source IP address: [none]\n");
+	}
 
 	if (misc_getenv_double("CURVEDNS_INTERNAL_TIMEOUT", 0, &tmpd)) {
 		if (tmpd > 60.) tmpd = 60.;
@@ -109,6 +132,8 @@ static void getenvoptions() {
 	} else {
 		debug_log(DEBUG_INFO, "shared secret cache: %d positions\n", global_shared_secrets);
 	}
+
+	return 1;
 }
 
 int main(int argc, char *argv[]) {
@@ -171,7 +196,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	// Fetch all optional options from the environment:
-	getenvoptions();
+	if (!getenvoptions())
+		return 1;
 
 	// Initialize the event handler, the core of CurveDNS:
 	if (!event_init()) {

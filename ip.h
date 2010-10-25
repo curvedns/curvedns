@@ -72,6 +72,7 @@ struct ip_socket_t {
 	ip_protocol_t protocol;		/* 0 = UDP, 1 = TCP */
 };
 
+extern anysin_t global_source_address;
 extern anysin_t global_target_address;
 extern socklen_t global_target_address_len;
 extern struct ip_socket_t *global_ip_sockets;

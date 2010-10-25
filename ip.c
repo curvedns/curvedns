@@ -48,6 +48,7 @@ size_t		global_ip_udp_buffersize = 4096;
 uint8_t		global_ip_udp_retries = 2;
 anysin_t	global_target_address;
 socklen_t	global_target_address_len = sizeof(anysin_t);
+anysin_t	global_source_address;
 
 static int ip_socket(anysin_t *address, ip_protocol_t protocol) {
 	return socket(address->sa.sa_family,
@@ -193,6 +194,11 @@ int ip_bind_random(int sock) {
 	if (global_target_address.sa.sa_family == AF_INET6) {
 		addr.sa.sa_family = AF_INET6;
 		for (i = 0; i < 10; i++) {
+			if (global_source_address.sa.sa_family != AF_UNSPEC) {
+				memcpy(addr.sin6.sin6_addr, 
+					global_source_address.sin6.sin6_addr,
+					sizeof(addr.sin6.sin6_addr));
+			}
 			addr.sin6.sin6_port = 1025 + misc_crypto_random(64510);
 			if (bind(sock, (struct sockaddr *) &addr, addrlen) == 0)
 				return 1;
@@ -200,6 +206,11 @@ int ip_bind_random(int sock) {
 	} else {
 		addr.sa.sa_family = AF_INET;
 		for (i = 0; i < 10; i++) {
+			if (global_source_address.sa.sa_family != AF_UNSPEC) {
+				memcpy(addr.sin.sin_addr, 
+					global_source_address.sin.sin_addr,
+					sizeof(addr.sin.sin_addr));
+			}
 			addr.sin.sin_port = 1025 + misc_crypto_random(64510);
 			if (bind(sock, (struct sockaddr *) &addr, addrlen) == 0)
 				return 1;

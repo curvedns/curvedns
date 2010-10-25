@@ -1,3 +1,8 @@
+2010-10-xx	0.87
+	- Source IP when target is contacted can be specified in 
+	    CURVEDNS_SOURCE_IP -- Hauke Lampe <lampe@hauke-lampe.de>
+	- configure.curvedns now also accepts ABI as first argument
+	    -- Maciej Żenczykowski <zenczykowski@gmail.com>
+
 2010-10-23	0.86
 	Initial release
-

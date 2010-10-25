@@ -46,7 +46,9 @@
 #include <fcntl.h>
 
 #include "debug.h"
+#include "ip.h"
 
+extern int misc_getenv_ip(const char *, int, anysin_t *);
 extern int misc_getenv_int(const char *, int, int *);
 extern int misc_getenv_double(const char *, int, double *);
 extern int misc_getenv_key(const char *, int, uint8_t *);
