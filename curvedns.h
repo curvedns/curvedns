@@ -49,8 +49,6 @@
 #include <arpa/inet.h>
 
 #include "debug.h"
-#include "misc.h"
-#include "ip.h"
 
 extern uint8_t global_secret_key[32];
 extern int global_urandom_fd;

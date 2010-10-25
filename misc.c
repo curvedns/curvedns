@@ -58,7 +58,7 @@ static char *misc_getenv(const char *env, int mandatory) {
 int misc_getenv_ip(const char *env, int mandatory, anysin_t *result) {
 	char *ptr = misc_getenv(env, mandatory);
 	if (ptr) {
-		if (!ip_parse(result, ptr, 53))
+		if (!ip_parse(result, ptr, "53"))
 			return -1;
 		return 1;
 	}

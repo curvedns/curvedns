@@ -72,15 +72,15 @@ event.a: event_main.o event_udp.o event_tcp.o
 	$(AR) cr event.a event_main.o event_udp.o event_tcp.o
 	ranlib event.a
 
-misc.o: misc.c misc.h debug.o
+misc.o: misc.c misc.h ip.o debug.o
 	$(CC) $(CFLAGS) -c misc.c
 
 curvedns-keygen.o: curvedns-keygen.c
 	$(CC) $(CFLAGS) -c curvedns-keygen.c
 
 # The targets:
-curvedns: debug.o misc.o cache.a event.a ip.o dnscurve.o dns.o curvedns.o
-	$(CC) $(LDFLAGS) debug.o misc.o ip.o dnscurve.o dns.o cache.a event.a curvedns.o $(EXTRALIB) -lnacl -o curvedns
+curvedns: debug.o ip.o misc.o cache.a event.a dnscurve.o dns.o curvedns.o
+	$(CC) $(LDFLAGS) debug.o ip.o misc.o dnscurve.o dns.o cache.a event.a curvedns.o $(EXTRALIB) -lnacl -o curvedns
 
-curvedns-keygen: curvedns-keygen.o debug.o misc.o
-	$(CC) $(LDFLAGS) curvedns-keygen.o debug.o misc.o -lnacl -o curvedns-keygen
+curvedns-keygen: curvedns-keygen.o debug.o ip.o misc.o
+	$(CC) $(LDFLAGS) curvedns-keygen.o debug.o ip.o misc.o -lnacl -o curvedns-keygen

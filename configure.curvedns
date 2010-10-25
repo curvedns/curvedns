@@ -84,7 +84,7 @@ fi
 abi=`cat "$curve"/abi`
 
 if [ ! -f "okc-$abi" ]; then
-  echo "Did not find any suitable compiler for this ABI, does the $abi ABI exist?"
+  echo "Did not find any suitable compiler for this ABI, does the '$abi' ABI exist?"
   rm -rf "$curve"
   exit 1
 fi

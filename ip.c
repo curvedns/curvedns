@@ -35,6 +35,8 @@
  */
 
 #include "ip.h"
+#include "misc.h"
+#include "curvedns.h"
 
 /* Global definitions, that are IP (or: network) related */
 struct ip_socket_t *global_ip_sockets = NULL;
@@ -195,8 +197,8 @@ int ip_bind_random(int sock) {
 		addr.sa.sa_family = AF_INET6;
 		for (i = 0; i < 10; i++) {
 			if (global_source_address.sa.sa_family != AF_UNSPEC) {
-				memcpy(addr.sin6.sin6_addr, 
-					global_source_address.sin6.sin6_addr,
+				memcpy(&(addr.sin6.sin6_addr),
+					&(global_source_address.sin6.sin6_addr),
 					sizeof(addr.sin6.sin6_addr));
 			}
 			addr.sin6.sin6_port = 1025 + misc_crypto_random(64510);
@@ -207,8 +209,8 @@ int ip_bind_random(int sock) {
 		addr.sa.sa_family = AF_INET;
 		for (i = 0; i < 10; i++) {
 			if (global_source_address.sa.sa_family != AF_UNSPEC) {
-				memcpy(addr.sin.sin_addr, 
-					global_source_address.sin.sin_addr,
+				memcpy(&(addr.sin.sin_addr),
+					&(global_source_address.sin.sin_addr),
 					sizeof(addr.sin.sin_addr));
 			}
 			addr.sin.sin_port = 1025 + misc_crypto_random(64510);

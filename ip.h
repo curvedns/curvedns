@@ -52,8 +52,6 @@
 #include <netdb.h>			/* getaddrinfo() */
 
 #include <ev.h>				/* libev */
-#include "debug.h"
-#include "curvedns.h"
 
 typedef union {
 	struct sockaddr sa;

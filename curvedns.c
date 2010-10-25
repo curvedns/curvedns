@@ -85,7 +85,6 @@ static int getenvoptions() {
 			return 0;
 		debug_log(DEBUG_FATAL, "source IP address: %s\n", ip);
 	} else {
-		global_source_address
 		debug_log(DEBUG_INFO, "source IP address: [none]\n");
 	}
 
