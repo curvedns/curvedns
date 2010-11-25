@@ -106,6 +106,7 @@ int curvedns_env(char *path, char *name) {
 	if (chmod(fullpath, 0400) != 0) return 1;
 
 	printf("Authoritative name server name:\n%s\n", fullname);
+	printf("DNS public key:\n%s\n", dnspublic);
 	printf("Hex public key:\n%s\n", hexpublic);
 	printf("Hex secret key:\n%s\n", hexprivate);
 	printf("\n");

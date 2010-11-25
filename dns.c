@@ -124,7 +124,7 @@ int dns_forward_query_udp(event_entry_t *general_entry) {
 	n = sendto(sock, entry->buffer, entry->packetsize, MSG_DONTWAIT,
 			(struct sockaddr *) &global_target_address.sa, global_target_address_len);
 	if (n == -1) {
-		debug_log(DEBUG_ERROR, "dns_forward_query_udp(): unable to forward the query (%s)\n", strerror(errno));
+		debug_log(DEBUG_ERROR, "dns_forward_query_udp(): unable to forward the query to authoritative name server (%s)\n", strerror(errno));
 		goto wrong;
 	}
 
@@ -199,7 +199,7 @@ wrong:
 
 int dns_reply_query_udp(event_entry_t *general_entry) {
 	struct event_udp_entry *entry = &general_entry->udp;
-	socklen_t addresslen = sizeof(anysin_t);
+	socklen_t addresslen;
 	int n;
 
 	if (entry->dns.type == DNS_NON_DNSCURVE) {
@@ -222,8 +222,14 @@ int dns_reply_query_udp(event_entry_t *general_entry) {
 
 	entry->state = EVENT_UDP_EXT_WRITING;
 
+	if (entry->address.sa.sa_family == AF_INET) {
+		addresslen = sizeof(struct sockaddr_in);
+	} else {
+		addresslen = sizeof(struct sockaddr_in6);
+	}
+
 	n = sendto(entry->sock->fd, entry->buffer, entry->packetsize, MSG_DONTWAIT,
-			(struct sockaddr *) &entry->address, addresslen);
+			(struct sockaddr *) &entry->address.sa, addresslen);
 	if (n == -1) {
 		debug_log(DEBUG_ERROR, "dns_reply_query_udp(): unable to send the response to the client (%s)\n", strerror(errno));
 		goto wrong;
@@ -235,9 +241,10 @@ wrong:
 	return 0;
 }
 
+/*
 int dns_reply_nxdomain_query_udp(event_entry_t *general_entry) {
 	struct event_udp_entry *entry = &general_entry->udp;
-	socklen_t addresslen = sizeof(anysin_t);
+	socklen_t addresslen = sizeof(CHECK THIS);
 
 	// XXX: make NXDOMAIN reply with DNSCurve
 
@@ -251,7 +258,7 @@ int dns_reply_nxdomain_query_udp(event_entry_t *general_entry) {
 		entry->buffer[3] = (entry->buffer[3] & 0xf0) | 3;
 
 		sendto(entry->sock->fd, entry->buffer, entry->packetsize, MSG_DONTWAIT,
-				(struct sockaddr *) &entry->address, addresslen);
+				(struct sockaddr *) &entry->address.sa, addresslen);
 
 	} else if (entry->dns.type == DNS_DNSCURVE_STREAMLINED) {
 
@@ -273,6 +280,7 @@ int dns_reply_nxdomain_query_udp(event_entry_t *general_entry) {
 wrong:
 	return 0;
 }
+*/
 
 int dns_reply_query_tcp(event_entry_t *general_entry) {
 	struct event_tcp_entry *entry = &general_entry->tcp;

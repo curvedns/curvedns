@@ -99,8 +99,8 @@ void event_udp_int_cb(struct ev_loop *loop, ev_io *w, int revent) {
 	event_entry_t *general_entry = (event_entry_t *) w->data;
 	struct event_udp_entry *entry = (struct event_udp_entry *) &general_entry->udp;
 	int n;
-	anysin_t addr;
-	socklen_t addrlen = sizeof(anysin_t);
+	anysin_t address;
+	socklen_t addresslen = sizeof(anysin_t);
 
 	if (!(revent & EV_READ))
 		goto wrong;
@@ -116,9 +116,11 @@ void event_udp_int_cb(struct ev_loop *loop, ev_io *w, int revent) {
 	entry->state = EVENT_UDP_INT_READING;
 
 	n = recvfrom(w->fd, entry->buffer, global_ip_udp_buffersize, MSG_DONTWAIT,
-			(struct sockaddr *) &addr.sa, &addrlen);
-	if (n == -1)
+			(struct sockaddr *) &address.sa, &addresslen);
+	if (n == -1) {
+		// The ready for reading event will again be triggered...
 		return;
+	}
 
 	entry->packetsize = n;
 
@@ -129,15 +131,15 @@ void event_udp_int_cb(struct ev_loop *loop, ev_io *w, int revent) {
 	}
 
 	// Check if the response really came from our target server:
-	if (ip_compare_address(&addr, &global_target_address) != 0) {
+	if (ip_compare_address(&address, &global_target_address) != 0) {
 		char s[52];
-		ip_address_total_string(&addr, s, sizeof(s));
+		ip_address_total_string(&address, s, sizeof(s));
 		debug_log(DEBUG_WARN, "event_udp_int_cb(): response is not coming from target address, but from %s\n", s);
 		goto wrong;
 	}
 
 	// And the same goes for the port:
-	if (ip_compare_port(&addr, &global_target_address) != 0) {
+	if (ip_compare_port(&address, &global_target_address) != 0) {
 		debug_log(DEBUG_WARN, "event_udp_int_cb(): response is not coming from target address port\n");
 		goto wrong;
 	}
@@ -191,8 +193,10 @@ void event_udp_ext_cb(struct ev_loop *loop, ev_io *w, int revent) {
 
 	n = recvfrom(w->fd, entry->buffer, entry->bufferlen, MSG_DONTWAIT,
 			(struct sockaddr *) &entry->address.sa, &addresslen);
-	if (n == -1)
+	if (n == -1) {
+		// YYY: maybe an overlap
 		goto wrong;
+	}
 
 	entry->packetsize = n;
 

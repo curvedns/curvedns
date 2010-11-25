@@ -159,6 +159,13 @@ int main(int argc, char *argv[]) {
 	// Parse target IP:
 	if (!ip_parse(&global_target_address, argv[3], argv[4]))
 		return usage(argv[0]);
+	
+	// XXX: should be handled by ip_parse() :/?
+	if (global_target_address.sa.sa_family == AF_INET) {
+		global_target_address_len = sizeof(struct sockaddr_in);
+	} else {
+		global_target_address_len = sizeof(struct sockaddr_in6);
+	}
 
 	// Open urandom for randomness during run:
 	if (!misc_crypto_random_init()) {

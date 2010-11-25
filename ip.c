@@ -49,7 +49,7 @@ size_t		global_ip_tcp_buffersize = 8192;
 size_t		global_ip_udp_buffersize = 4096;
 uint8_t		global_ip_udp_retries = 2;
 anysin_t	global_target_address;
-socklen_t	global_target_address_len = sizeof(anysin_t);
+socklen_t	global_target_address_len;
 anysin_t	global_source_address;
 
 static int ip_socket(anysin_t *address, ip_protocol_t protocol) {
