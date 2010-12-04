@@ -55,7 +55,7 @@ anysin_t	global_source_address;
 static int ip_socket(anysin_t *address, ip_protocol_t protocol) {
 	return socket(address->sa.sa_family,
 		(protocol == IP_PROTOCOL_UDP) ? SOCK_DGRAM : SOCK_STREAM,
-		(protocol == IP_PROTOCOL_UDP) ? IPPROTO_UDP : IPPROTO_TCP);
+		0);
 }
 
 static int ip_tcp_listen(int sock) {
@@ -70,9 +70,10 @@ static int ip_tcp_listen(int sock) {
 
 int ip_udp_open(int *sock, anysin_t *address) {
 	*sock = ip_socket(address, IP_PROTOCOL_UDP);
-	if (*sock <= 0)
+	if (*sock < 0)
 		goto wrong;
-
+	if (!ip_nonblock(*sock))
+		debug_log(DEBUG_WARN, "ip_udp_open(): unable to set socket non-blocking (%s)\n", strerror(errno));
 	return 1;
 
 wrong:
@@ -81,26 +82,25 @@ wrong:
 	return 0;
 }
 
-int ip_tcp_nonblock(int sock) {
-	int n;
+int ip_nonblock(int sock) {
 	if (fcntl(sock, F_SETFL, (fcntl(sock, F_GETFL, 0)) | O_NONBLOCK) == -1)
-		goto wrong;
-
-	n = 1;
-	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &n, sizeof(n)) == -1)
-        goto wrong;
-
+		return 0;
 	return 1;
+}
 
-wrong:
-	return 0;
+int ip_reuse(int sock) {
+	int n = 1;
+	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &n, sizeof(n)) == -1)
+        	return 0;
+	return 1;
 }
 
 int ip_tcp_open(int *sock, anysin_t *address) {
 	*sock = ip_socket(address, IP_PROTOCOL_TCP);
 	if (*sock < 0)
 		goto wrong;
-
+	if (!ip_nonblock(*sock))
+		debug_log(DEBUG_WARN, "ip_tcp_open(): unable to set socket non-blocking (%s)\n", strerror(errno));
 	return 1;
 
 wrong:
@@ -141,6 +141,8 @@ int ip_init(anysin_t *addresses, int addresses_count) {
 			debug_log(DEBUG_FATAL, "ip_init(): unable to open UDP socket (%s)\n", strerror(errno));
 			goto wrong;
 		}
+		if (!ip_reuse(global_ip_sockets[sid].fd)) 
+			debug_log(DEBUG_WARN, "ip_init(): unable to set UDP socket to reuse address (%s)\n", strerror(errno));
 		if (!ip_bind(global_ip_sockets[sid].fd, &addresses[i])) {
 			debug_log(DEBUG_FATAL, "ip_init(): unable to bind UDP socket (%s)\n", strerror(errno));
 			goto wrong;
@@ -153,10 +155,8 @@ int ip_init(anysin_t *addresses, int addresses_count) {
 			debug_log(DEBUG_FATAL, "ip_init(): unable to open TCP socket (%s)\n", strerror(errno));
 			goto wrong;
 		}
-		if (!ip_tcp_nonblock(global_ip_sockets[sid+1].fd)) {
-			debug_log(DEBUG_FATAL, "ip_init(): unable to set TCP to non-blocking mode (%s)\n", strerror(errno));
-			goto wrong;
-		}
+		if (!ip_reuse(global_ip_sockets[sid+1].fd)) 
+			debug_log(DEBUG_WARN, "ip_init(): unable to set TCP socket to reuse address (%s)\n", strerror(errno));
 		if (!ip_bind(global_ip_sockets[sid+1].fd, &addresses[i])) {
 			debug_log(DEBUG_FATAL, "ip_init(): unable to bind TCP socket (%s)\n", strerror(errno));
 			goto wrong;

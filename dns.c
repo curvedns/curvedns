@@ -94,7 +94,7 @@ int dns_forward_query_udp(event_entry_t *general_entry) {
 	struct event_udp_entry *entry = &general_entry->udp;
 
 	if (!ip_udp_open(&sock, &global_target_address)) {
-		debug_log(DEBUG_ERROR, "dns_forward_query_udp(): unable to open a UDP port to forward query to authoritative server");
+		debug_log(DEBUG_ERROR, "dns_forward_query_udp(): unable to open a UDP port to forward query to authoritative server\n");
 		goto wrong;
 	}
 
@@ -142,11 +142,6 @@ int dns_forward_query_tcp(event_entry_t *general_entry) {
 		goto wrong;
 	}
 
-	if (!ip_tcp_nonblock(entry->intsock)) {
-		// XXX: this is not fatal?
-		debug_log(DEBUG_WARN, "dns_forward_query_tcp(): unable to make TCP socket non-blocking\n");
-	}
-
 	if (!ip_connect(entry->intsock, &global_target_address)) {
 		debug_log(DEBUG_ERROR, "dns_forward_query_tcp(): unable to connect to authoritative name server (%s)\n", strerror(errno));
 		goto wrong;
@@ -155,6 +150,7 @@ int dns_forward_query_tcp(event_entry_t *general_entry) {
 	// Now generate a new TXID to forecome any poisoning:
 	entry->buffer[0] = misc_crypto_random(256);
 	entry->buffer[1] = misc_crypto_random(256);
+	// XXX: do this platform safe (i.e. ntoh)
 	entry->dns.dsttxid = (entry->buffer[0] << 8) + entry->buffer[1];
 
 	debug_log(DEBUG_INFO, "dns_forward_query_tcp(): forwarding query to authoritative name server (prev id = %d, new id = %d)\n",

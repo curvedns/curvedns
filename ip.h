@@ -88,8 +88,9 @@ extern void ip_close();
 extern int ip_bind_random(int);
 extern int ip_bind(int, anysin_t *);
 extern int ip_connect(int, anysin_t *);
+extern int ip_nonblock(int);
+extern int ip_reuse(int);
 extern int ip_udp_open(int *, anysin_t *);
-extern int ip_tcp_nonblock(int);
 extern int ip_tcp_open(int *, anysin_t *);
 extern int ip_tcp_close(int);
 
