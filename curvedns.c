@@ -79,7 +79,7 @@ static int getenvoptions() {
 		return 0;
 	} else if (tmpi) {
 		if (global_target_address.sa.sa_family != global_source_address.sa.sa_family) {
-			debug_log(DEBUG_FATAL, "IP address of $CURVEDNS_SOURCE_IP is not in the same family as the target address\n");
+			debug_log(DEBUG_FATAL, "IP address of $CURVEDNS_SOURCE_IP is not in the same family (IPv4/IPv6) as the target address\n");
 			return 0;
 		}
 		if (!ip_address_string(&global_source_address, ip, sizeof(ip)))

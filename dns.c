@@ -98,8 +98,11 @@ int dns_forward_query_udp(event_entry_t *general_entry) {
 		goto wrong;
 	}
 
-	// If this fails, trust on the kernel to arrange a port:
-	ip_bind_random(sock);
+	// randomize the outgoing source port and set the source IP address, if needed
+	if (!ip_bind_random(sock)) {
+		// if this fails, let the kernel handle it (would mean source IP address is not guaranteed...)
+		debug_log(DEBUG_WARN, "dns_forward_query_udp(): unable to bind to source IP address and/or random port\n");
+	}
 
 	entry->state = EVENT_UDP_INT_WRITING;
 	entry->read_int_watcher.data = general_entry;
@@ -140,6 +143,13 @@ int dns_forward_query_tcp(event_entry_t *general_entry) {
 	if (!ip_tcp_open(&entry->intsock, &global_target_address)) {
 		debug_log(DEBUG_ERROR, "dns_forward_query_tcp(): unable to open TCP socket\n");
 		goto wrong;
+	}
+	
+	// randomizing port is not really necessary, as TCP is invulnerable to cache poisoning
+	// however, the source IP address is set in ip_bind_random...
+	if (!ip_bind_random(entry->intsock)) {
+		// if this fails, let the kernel handle it (would mean source IP address is not guaranteed...)
+		debug_log(DEBUG_WARN, "dns_forward_query_tcp(): unable to bind to source IP address and/or random port\n");
 	}
 
 	if (!ip_connect(entry->intsock, &global_target_address)) {
