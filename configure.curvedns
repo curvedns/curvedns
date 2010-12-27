@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # XXX: make it POSIX-shell compatible (select isn't)
 

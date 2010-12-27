@@ -1,14 +1,15 @@
 2010-xx-xx	0.87
+	- Sometimes CurveDNS closed sockfd 0. -- Harm van Tilborg, 
+	    suggested by Leo Vandewoestijne and Dan Bernstein.
 	- Some small logging improvements. -- Harm van Tilborg
 	- Fixed sendto(2) in *BSD environment, was expecting exact 
 	    address length, instead of largest (struct sockaddr_in6)
 	    one. -- Harm van Tilborg
 	- Source IP when target is contacted can be specified in 
 	    CURVEDNS_SOURCE_IP -- Harm van Tilborg, suggested by
-	    Hauke Lampe <lampe@hauke-lampe.de>
+	    Hauke Lampe.
 	- configure.curvedns now also accepts ABI as first argument
-	    -- Harm van Tilborg, suggested by Maciej
-	    Żenczykowski <zenczykowski@gmail.com>
+	    -- Harm van Tilborg, suggested by Maciej Zenczykowski.
 
 2010-10-23	0.86
 	Initial release

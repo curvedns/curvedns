@@ -125,7 +125,7 @@ void event_udp_int_cb(struct ev_loop *loop, ev_io *w, int revent) {
 	entry->packetsize = n;
 
 	// We can also close the socket towards the authoritative name server, as we are done:
-	if (entry->read_int_watcher.fd) {
+	if (entry->read_int_watcher.fd >= 0) {
 		close(entry->read_int_watcher.fd);
 		entry->read_int_watcher.fd = -1;
 	}

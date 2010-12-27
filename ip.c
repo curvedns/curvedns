@@ -104,8 +104,10 @@ int ip_tcp_open(int *sock, anysin_t *address) {
 	return 1;
 
 wrong:
-	if (*sock >= 0)
+	if (*sock >= 0) {
 		close(*sock);
+		*sock = -1;
+	}
 	return 0;
 }
 
