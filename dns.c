@@ -94,7 +94,7 @@ int dns_forward_query_udp(event_entry_t *general_entry) {
 	struct event_udp_entry *entry = &general_entry->udp;
 
 	if (!ip_udp_open(&sock, &global_target_address)) {
-		debug_log(DEBUG_ERROR, "dns_forward_query_udp(): unable to open a UDP port to forward query to authoritative server\n");
+		debug_log(DEBUG_ERROR, "dns_forward_query_udp(): unable to open a UDP socket to forward query to authoritative server\n");
 		goto wrong;
 	}
 
