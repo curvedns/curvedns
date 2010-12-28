@@ -86,14 +86,14 @@ int curvedns_env(char *path, char *name) {
 		mkdir(fullpath, 0700);
 	} else {
 		if (!S_ISDIR(st.st_mode)) {
-			fprintf(stderr, "%s is not a directory, remove this first\n", fullpath);
+			fprintf(stderr, "%s is not a directory, manually remove this first\n", fullpath);
 			return 1;
 		}
 	}
 
 	if (snprintf(fullpath, sizeof(fullpath), "%s/env/CURVEDNS_PRIVATE_KEY", path) < 0) return 1;
 	if (stat(fullpath, &st) == 0) {
-		fprintf(stderr, "A private key file already exists, remove that first.\n");
+		fprintf(stderr, "A private key file already exists, manually remove that first.\n");
 		return 1;
 	}
 	f = fopen(fullpath, "w");
@@ -110,7 +110,7 @@ int curvedns_env(char *path, char *name) {
 	printf("Hex public key:\n%s\n", hexpublic);
 	printf("Hex secret key:\n%s\n", hexprivate);
 	printf("\n");
-	printf("The private key was written to %s, so it can be used inside CurveDNS environment.\n", fullpath);
+	printf("The private key was written to %s, so it can be used inside the CurveDNS environment.\n", fullpath);
 
 	return 0;
 }

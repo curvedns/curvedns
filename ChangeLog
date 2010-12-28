@@ -1,4 +1,4 @@
-2010-xx-xx	0.87
+2010-12-28	0.87
 	- Sometimes CurveDNS closed sockfd 0. -- Harm van Tilborg, 
 	    suggested by Leo Vandewoestijne and Dan Bernstein.
 	- Some small logging improvements. -- Harm van Tilborg
