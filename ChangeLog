@@ -1,15 +1,20 @@
+2011-xx-xx	0.88
+	- If event_cleanup_udp_entry() was called before external 
+	    UDP socket was opened, it would close fd 0. -- Harm van
+	    Tilborg, thanks Dan Bernstein.
+
 2010-12-28	0.87
 	- Sometimes CurveDNS closed sockfd 0. -- Harm van Tilborg, 
-	    suggested by Leo Vandewoestijne and Dan Bernstein.
+	    thanks Leo Vandewoestijne and Dan Bernstein.
 	- Some small logging improvements. -- Harm van Tilborg
 	- Fixed sendto(2) in *BSD environment, was expecting exact 
 	    address length, instead of largest (struct sockaddr_in6)
 	    one. -- Harm van Tilborg
 	- Source IP when target is contacted can be specified in 
-	    CURVEDNS_SOURCE_IP -- Harm van Tilborg, suggested by
-	    Hauke Lampe.
+	    CURVEDNS_SOURCE_IP -- Harm van Tilborg, thanks Hauke 
+	    Lampe.
 	- configure.curvedns now also accepts ABI as first argument
-	    -- Harm van Tilborg, suggested by Maciej Zenczykowski.
+	    -- Harm van Tilborg, thanks Maciej Zenczykowski.
 
 2010-10-23	0.86
 	Initial release
