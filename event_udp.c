@@ -190,6 +190,7 @@ void event_udp_ext_cb(struct ev_loop *loop, ev_io *w, int revent) {
 	entry->retries = 0;
 	entry->sock = sock;
 	entry->state = EVENT_UDP_EXT_READING;
+	entry->read_int_watcher.fd = -1;
 
 	n = recvfrom(w->fd, entry->buffer, entry->bufferlen, MSG_DONTWAIT,
 			(struct sockaddr *) &entry->address.sa, &addresslen);
