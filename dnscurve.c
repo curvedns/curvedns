@@ -214,17 +214,23 @@ int dnscurve_analyze_query(event_entry_t *general_entry) {
 		packet->type = DNS_DNSCURVE_STREAMLINED;
 		packet->srctxid = (entry->buffer[0] << 8) + entry->buffer[1];
 
-		debug_log(DEBUG_INFO, "dnscurve_analyze_query(): DNSCurve streamlined query received (packetsize = %zd)\n",
+		debug_log(DEBUG_INFO, "dnscurve_analyze_query(): DNSCurve streamlined query received and opened (packetsize = %zd)\n",
 				entry->packetsize);
 
 		return 1;
 	}
 
-	// Must be query, no op code, not authoritative and no truncation bit
-	// set. In all other cases, we do not handle _any_ of such queries:
-	if (entry->buffer[2] & 0xfe) {
+	// To avoid nastly loops, check whether packet is a query:
+	if (entry->buffer[2] & 0x80) {
 		debug_log(DEBUG_ERROR, "dnscurve_analyze_query(): not a query\n");
 		goto wrong;
+	}
+
+	// Must be query, no op code, not authoritative and no truncation bit
+	// set. In all other cases, it is surely not a DNSCurve TXT packet:
+	if (entry->buffer[2] & 0xfe) {
+		debug_log(DEBUG_ERROR, "dnscurve_analyze_query(): no DNSCurve TXT (opcode, aa-, or truncation bit set)\n");
+		return 1;
 	}
 
 	// In order to be DNSCurve TXT format, recursion available flag should be

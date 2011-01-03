@@ -1,4 +1,7 @@
 2011-xx-xx	0.88
+	- Non-DNSCurve query packets were too intensively checked 
+	    (on OPCODE, AA, TC). -- Harm van Tilborg, thanks 
+	    Andreas Schulze.
 	- If event_cleanup_udp_entry() was called before external 
 	    UDP socket was opened, it would close fd 0. -- Harm van
 	    Tilborg, thanks Dan Bernstein.
