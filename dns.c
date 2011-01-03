@@ -112,6 +112,7 @@ int dns_forward_query_udp(event_entry_t *general_entry) {
 	// Now generate a new TXID to forecome any poisoning:
 	entry->buffer[0] = misc_crypto_random(256);
 	entry->buffer[1] = misc_crypto_random(256);
+	// XXX: do this platform safe (i.e. ntoh)
 	entry->dns.dsttxid = (entry->buffer[0] << 8) + entry->buffer[1];
 
 	ev_io_init(&entry->read_int_watcher, event_udp_int_cb, sock, EV_READ);
@@ -246,47 +247,6 @@ int dns_reply_query_udp(event_entry_t *general_entry) {
 wrong:
 	return 0;
 }
-
-/*
-int dns_reply_nxdomain_query_udp(event_entry_t *general_entry) {
-	struct event_udp_entry *entry = &general_entry->udp;
-	socklen_t addresslen = sizeof(CHECK THIS);
-
-	// XXX: make NXDOMAIN reply with DNSCurve
-
-	if (entry->dns.type == DNS_NON_DNSCURVE) {
-
-		entry->state = EVENT_UDP_EXT_WRITING;
-
-		entry->buffer[0] = entry->dns.srctxid >> 8;
-		entry->buffer[1] = entry->dns.srctxid & 0xff;
-		entry->buffer[2] |= 0x80;
-		entry->buffer[3] = (entry->buffer[3] & 0xf0) | 3;
-
-		sendto(entry->sock->fd, entry->buffer, entry->packetsize, MSG_DONTWAIT,
-				(struct sockaddr *) &entry->address.sa, addresslen);
-
-	} else if (entry->dns.type == DNS_DNSCURVE_STREAMLINED) {
-
-		debug_log(DEBUG_INFO, "dns_reply_nxdomain_query_udp(): doing NXDOMAIN reply in streamlined format - not implemented yet\n");
-		// XXX: to fix!
-
-	} else if ((entry->dns.type == DNS_DNSCURVE_TXT_RD_SET) || (entry->dns.type == DNS_DNSCURVE_TXT_RD_UNSET)) {
-
-		debug_log(DEBUG_INFO, "dns_reply_nxdomain_query_udp(): doing NXDOMAIN reply in TXT format - not implemented yet\n");
-		// XXX: to fix!
-
-	} else {
-		debug_log(DEBUG_ERROR, "dns_reply_nxdomain_query_udp(): DNS type was unknown (%d)\n", entry->dns.type);
-		goto wrong;
-	}
-
-	return 1;
-
-wrong:
-	return 0;
-}
-*/
 
 int dns_reply_query_tcp(event_entry_t *general_entry) {
 	struct event_tcp_entry *entry = &general_entry->tcp;

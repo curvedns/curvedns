@@ -80,16 +80,6 @@ void event_udp_timeout_cb(struct ev_loop *loop, ev_timer *w, int revent) {
 
 	return;
 
-/*
-nxdomain:
-	ev_io_stop(loop, &entry->read_int_watcher);
-	ev_timer_stop(loop, &entry->timeout_int_watcher);
-
-	if (!dns_reply_nxdomain_query_udp(general_entry)) {
-		debug_log(DEBUG_WARN, "event_udp_timeout_cb(): unable to send NXDOMAIN response\n");
-	}
-*/
-
 wrong:
 	event_cleanup_entry(loop, general_entry);
 	return;
