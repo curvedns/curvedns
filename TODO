@@ -1,0 +1,5 @@
+- Implement chroot(2).
+- Implement domain specific forwarding.
+- Implement safer key management (in files instead of in environment).
+- Implement counters of handled queries (regular/curve/failed/failed curve/etc).
+- Fix spelling/grammar errors in thesis.
