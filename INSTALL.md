@@ -388,3 +388,31 @@ This will result in the following log message:
 ```
 event_signal_cb(): received SIGHUP - clearing cache
 ```
+
+# CurveDNS performance
+
+When programmers, users, and even managers are discussing security, one of the first things that comes to mind is a performance hit due to any of the used cryptographic primitives.
+To give DNS data managers, DNS users (yes, you are one too, else you wouldn't be here), and managers good arguments on this matter a complete chapter of the master thesis focused on CurveDNS has been spent on this matter.
+
+*This chapter is under construction.*
+*For the moment we refer you to section 5.4 of the master thesis [Shaping DNS Security with Curves](https://curvedns.github.io/curvedns/thesis/shaping_dns_security_with_curves.pdf).*
+
+# Frequently Asked Questions
+
+Below you will find all frequently asked questions.
+
+* **Are DNSCurve keys domain based?**
+
+  No, they are not.
+  In fact keys used in DNSCurve are server based.
+  Meaning that all domains that are hosted at the same authoritative name server should have the same DNSCurve public key prefix (i.e. uz5...).
+  An example will clarify this.
+
+  Assume you own both `example.com` and `example.org` and you host -- to simplify the story a bit -- both domains on one authoritative name server: `ns.example.net`.
+  If you are putting CurveDNS in front of this name server, you only have to generate one keypair.
+  The name servers of *both* domains will therefore change to (for example): `uz52gs53blkwtykrqpvh4mzf8jqjs278yfd956bgudck6bq5pl9hz2.ns.example.net`.
+
+* **Why did CurveDNS’ initial release get the version number 0.86?**
+
+  You might not believe it, but actually there are programmers these days that said 'Hello World' in 1986.
+
