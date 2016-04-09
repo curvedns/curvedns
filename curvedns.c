@@ -57,6 +57,7 @@ static int usage(const char *argv0) {
 	debug_log(DEBUG_FATAL, " CURVEDNS_PRIVATE_KEY\n\tThe hexidecimal representation of the server's private (secret) key\n");
 	debug_log(DEBUG_FATAL, " UID\n\tNon-root user id to run under\n");
 	debug_log(DEBUG_FATAL, " GID\n\tNon-root user group id to run under\n");
+ 	debug_log(DEBUG_FATAL, " ROOT\n\tRun chrooted in the directory specified by the $ROOT environment variable\n");
 	debug_log(DEBUG_FATAL, " [CURVEDNS_SOURCE_IP]\n\tThe IP to bind on when target server is contacted (default: [none])\n");
 	debug_log(DEBUG_FATAL, " [CURVEDNS_INTERNAL_TIMEOUT]\n\tNumber of seconds to declare target server timeout (default: 1.2)\n");
 	debug_log(DEBUG_FATAL, " [CURVEDNS_UDP_TRIES]\n\tWhen timeout to target server, how many tries in total (default: 2)\n");
@@ -138,6 +139,7 @@ static int getenvoptions() {
 
 int main(int argc, char *argv[]) {
 	int uid, gid, tmp;
+	char *chroot_dir;
 
 	if (argc != 5)
 		return usage(argv[0]);
@@ -189,6 +191,21 @@ int main(int argc, char *argv[]) {
 	if (!ip_init(local_addresses, local_addresses_count)) {
 		debug_log(DEBUG_FATAL, "ip_init(): failed, are you root?\n");
 		return 1;
+	}
+
+	// chdir into ROOT directory and call chroot()
+	chroot_dir = getenv("ROOT");
+	if(chroot_dir != NULL) {
+		debug_log(DEBUG_INFO,"main(): chroot()'ing into ROOT\n");
+		if(chdir(chroot_dir) != 0) {
+			debug_log(DEBUG_FATAL, "main(): unable to chdir() into ROOT-directory\n");
+			return 1;
+		}
+	
+		if(chroot(".") != 0) {
+			debug_log(DEBUG_FATAL, "main(): chroot() failed\n");
+			return 1;
+		}
 	}
 
 	// Do exactly this ;]
