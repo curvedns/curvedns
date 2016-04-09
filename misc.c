@@ -34,6 +34,9 @@
  * $Revision$
  */
 
+#include <time.h>
+#include <sys/time.h>
+
 #include "misc.h"
 #include "ip.h"
 
@@ -98,6 +101,33 @@ int misc_getenv_key(const char *env, int mandatory, uint8_t *result) {
 		debug_log(DEBUG_FATAL, "key in $%s appears to be invalid\n", env);
 		return 0;
 	}
+	return 1;
+}
+
+int misc_getenv_noncekey(const char *env, int mandatory, uint8_t *result) {
+        char *ptr;
+        if (!(ptr = misc_getenv(env, mandatory))) {
+                return 0;
+        }
+
+        if (strlen(ptr) != 32) {
+                debug_log(DEBUG_FATAL, "nonce key in $%s must be 32 bytes long\n", env);
+                return 0;
+        }
+
+        if (!misc_hex_decode(ptr, result)) {
+                debug_log(DEBUG_FATAL, "nonce key in $%s appears to be invalid\n", env);
+                return 0;
+        }
+        return 1;
+}
+
+int misc_getenv_string(const char *env, int mandatory, char **result) {
+	char *ptr;
+	if (!(ptr = misc_getenv(env, mandatory))) {
+		return 0;
+	}
+	*result = ptr;
 	return 1;
 }
 
@@ -221,20 +251,117 @@ unsigned int misc_crypto_random(unsigned int n) {
 	return out[--outleft] % n;
 }
 
-// Make sure sizeof(nonce) >= 12
-void misc_crypto_nonce(uint8_t *nonce, void *time, int len) {
-	// We would like the first 64 bits to be time based.
-	// The last 32 bits can be random.
 
-	// XXX: but dirty solution, nicer way?
-	if (len < 8) {
-		memcpy(nonce, time, len);
-	} else {
-		memcpy(nonce, time, 8);
-		len = 8;
-	}
-	for ( ; len < 12; len++)
-		nonce[len] = misc_crypto_random(256);
+static void misc_uint32_pack(unsigned char *y, uint32_t x) {
+        *y++ = x; x >>= 8;
+        *y++ = x; x >>= 8;
+        *y++ = x; x >>= 8;
+        *y++ = x;
+}
+
+static uint32_t misc_uint32_unpack(const unsigned char *x) {
+        uint32_t result;
+        result = x[3];
+        result <<= 8; result |= x[2];
+        result <<= 8; result |= x[1];
+        result <<= 8; result |= x[0];
+        return result;
+}
+
+
+static void misc_crypto_nonce_encrypt(unsigned char *out, uint64_t in, const unsigned char *k) {
+
+        int i;
+        uint32_t v0, v1, k0, k1, k2, k3;
+        uint32_t sum = 0;
+        uint32_t delta=0x9e3779b9;
+
+        v0 = in; in >>= 32;
+        v1 = in;
+        k0 = misc_uint32_unpack(k + 0);
+        k1 = misc_uint32_unpack(k + 4);
+        k2 = misc_uint32_unpack(k + 8);
+        k3 = misc_uint32_unpack(k + 12);
+
+        for (i = 0; i < 32; i++) {
+                sum += delta;
+                v0 += ((v1<<4) + k0) ^ (v1 + sum) ^ ((v1>>5) + k1);
+                v1 += ((v0<<4) + k2) ^ (v0 + sum) ^ ((v0>>5) + k3);
+        }
+        misc_uint32_pack(out + 0, v0);
+        misc_uint32_pack(out + 4, v1);
+        return;
+}
+
+
+static int flagnoncekey;
+static unsigned char noncekey[16];
+static uint64_t noncecounter = 0;
+static char noncemask[4] = {(char)0xff, (char)0xff, (char)0xff, (char)0xff};
+static char noncedata[4] = {0, 0, 0, 0};
+void misc_crypto_nonce_init(char *ns, unsigned char nk[16], int fk) {
+
+        int i;
+        struct timeval t;
+
+        gettimeofday(&t,(struct timezone *) 0);
+        noncecounter = t.tv_sec * 1000000000LL + t.tv_usec * 1000LL;
+
+        if (!ns) ns = "";
+        i = 0;
+        while(i < 32) {
+            if (!ns[i]) break;
+            if (ns[i] != '0' && ns[i] != '1') break;
+
+            noncemask[i/8] = noncemask[i/8] * 2;
+            noncedata[i/8] = noncedata[i/8] * 2 +  ns[i] - '0';
+            ++i;
+        }
+        while(i < 32) {
+            noncemask[i/8] = noncemask[i/8] * 2 + 1;
+            noncedata[i/8] = noncedata[i/8] * 2;
+            ++i;
+        }
+
+        flagnoncekey = fk;
+        if (flagnoncekey) {
+            memcpy(noncekey, nk, sizeof noncekey);
+        }
+}
+
+/*
+nonce is 12-byte nonce with the following structure:
+nonce[0...3]: random or nonce-separation bits
+nonce[4...11]: counter (TEA encrypted counter)
+*/
+void misc_crypto_nonce(uint8_t *nonce) {
+
+        uint64_t x;
+
+        for(x = 0; x < 4; ++x) {
+            nonce[x] = misc_crypto_random(256);
+            nonce[x] &= noncemask[x];
+            nonce[x] += noncedata[x];
+        }
+
+        x = ++noncecounter;
+        if (flagnoncekey) {
+            misc_crypto_nonce_encrypt(nonce + 4, x, noncekey);
+        }
+        else {
+            nonce[4] = x; x >>= 8;
+            nonce[5] = x; x >>= 8;
+            nonce[6] = x; x >>= 8;
+            nonce[7] = x; x >>= 8;
+            nonce[8] = x; x >>= 8;
+            nonce[9] = x; x >>= 8;
+            nonce[10] = x; x >>= 8;
+            nonce[11] = x;
+        }
+
+        debug_log(DEBUG_DEBUG, "misc_crypto_nonce(): %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", 
+                nonce[0], nonce[1], nonce[2], nonce[3], nonce[4],nonce[5], nonce[6], nonce[7],
+                nonce[8], nonce[9], nonce[10], nonce[11]);
 }
 
 static const uint8_t kValues[] = {
