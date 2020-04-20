@@ -190,7 +190,6 @@ void ip_close() {
 int ip_bind_random(int sock) {
 	unsigned int i;
 	anysin_t addr;
-	socklen_t addrlen = sizeof(addr);
 
 	memset(&addr, 0, sizeof(addr));
 
@@ -204,7 +203,7 @@ int ip_bind_random(int sock) {
 					sizeof(addr.sin6.sin6_addr));
 			}
 			addr.sin6.sin6_port = 1025 + misc_crypto_random(64510);
-			if (bind(sock, (struct sockaddr *) &addr, addrlen) == 0)
+			if (bind(sock, (struct sockaddr *) &addr, sizeof(struct sockaddr_in6)) == 0)
 				return 1;
 		}
 	} else {
@@ -216,7 +215,7 @@ int ip_bind_random(int sock) {
 					sizeof(addr.sin.sin_addr));
 			}
 			addr.sin.sin_port = 1025 + misc_crypto_random(64510);
-			if (bind(sock, (struct sockaddr *) &addr, addrlen) == 0)
+			if (bind(sock, (struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == 0)
 				return 1;
 		}
 	}
