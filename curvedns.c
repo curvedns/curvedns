@@ -57,6 +57,7 @@ static int usage(const char *argv0) {
 	debug_log(DEBUG_FATAL, " CURVEDNS_PRIVATE_KEY\n\tThe hexidecimal representation of the server's private (secret) key\n");
 	debug_log(DEBUG_FATAL, " UID\n\tNon-root user id to run under\n");
 	debug_log(DEBUG_FATAL, " GID\n\tNon-root user group id to run under\n");
+ 	debug_log(DEBUG_FATAL, " ROOT\n\tRun chrooted in the directory specified by the $ROOT environment variable\n");
 	debug_log(DEBUG_FATAL, " [CURVEDNS_SOURCE_IP]\n\tThe IP to bind on when target server is contacted (default: [none])\n");
 	debug_log(DEBUG_FATAL, " [CURVEDNS_INTERNAL_TIMEOUT]\n\tNumber of seconds to declare target server timeout (default: 1.2)\n");
 	debug_log(DEBUG_FATAL, " [CURVEDNS_UDP_TRIES]\n\tWhen timeout to target server, how many tries in total (default: 2)\n");
@@ -64,10 +65,14 @@ static int usage(const char *argv0) {
 	debug_log(DEBUG_FATAL, " [CURVEDNS_TCP_TIMEOUT]\n\tNumber of seconds before TCP session to client times out (default: 60.0)\n");
 	debug_log(DEBUG_FATAL, " [CURVEDNS_SHARED_SECRETS]\n\tNumber of shared secrets that can be cached (default: 5000)\n");
 	debug_log(DEBUG_FATAL, " [CURVEDNS_DEBUG]\n\tDebug level, 1: fatal, 2: error, 3: warning, 4: info, 5: debug (default: 2)\n");
+	debug_log(DEBUG_FATAL, " [CURVEDNS_NONCE_KEY]\n\tThe hexidecimal representation of the nonce's secret key ((default: [none])\n");
+	debug_log(DEBUG_FATAL, " [CURVEDNS_NONCE_START]\n\tNonce starting bits (default: [none]):\n\t the  first of four servers '00'\n\t the second of four servers '01'\n\t the  third of four servers '10'\n\t ...\n");
 	return 1;
 }
 
 static int getenvoptions() {
+	char *tmpstring = (char *)0;
+	unsigned char tmpnoncekey[16]; int flagnoncekey = 0;
 	int tmpi;
 	double tmpd;
 	char ip[INET6_ADDRSTRLEN];
@@ -133,11 +138,24 @@ static int getenvoptions() {
 		debug_log(DEBUG_INFO, "shared secret cache: %d positions\n", global_shared_secrets);
 	}
 
+        if (misc_getenv_noncekey("CURVEDNS_NONCE_KEY", 0, tmpnoncekey)) {
+                flagnoncekey = 1;
+        }
+
+        if (misc_getenv_string("CURVEDNS_NONCE_START", 0, &tmpstring)) {
+		debug_log(DEBUG_FATAL, "nonce start string is '%s'\n", tmpstring);
+        }
+        else {
+		debug_log(DEBUG_INFO, "nonce start string is (null)\n");
+        }
+        misc_crypto_nonce_init(tmpstring, tmpnoncekey, flagnoncekey);
+
 	return 1;
 }
 
 int main(int argc, char *argv[]) {
 	int uid, gid, tmp;
+	char *chroot_dir;
 
 	if (argc != 5)
 		return usage(argv[0]);
@@ -189,6 +207,21 @@ int main(int argc, char *argv[]) {
 	if (!ip_init(local_addresses, local_addresses_count)) {
 		debug_log(DEBUG_FATAL, "ip_init(): failed, are you root?\n");
 		return 1;
+	}
+
+	// chdir into ROOT directory and call chroot()
+	chroot_dir = getenv("ROOT");
+	if(chroot_dir != NULL) {
+		debug_log(DEBUG_INFO,"main(): chroot()'ing into ROOT\n");
+		if(chdir(chroot_dir) != 0) {
+			debug_log(DEBUG_FATAL, "main(): unable to chdir() into ROOT-directory\n");
+			return 1;
+		}
+	
+		if(chroot(".") != 0) {
+			debug_log(DEBUG_FATAL, "main(): chroot() failed\n");
+			return 1;
+		}
 	}
 
 	// Do exactly this ;]

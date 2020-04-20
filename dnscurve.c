@@ -374,7 +374,7 @@ int dnscurve_reply_streamlined_query(event_entry_t *general_entry) {
 	// Set everything for the encryption step:
 	memcpy(fullnonce, packet->nonce, 12);
 	time = ev_now(event_default_loop);
-	misc_crypto_nonce(fullnonce + 12, &time, sizeof(time));
+	misc_crypto_nonce(fullnonce + 12);
 
 	result = dnscurve_get_shared_secret(packet);
 	if ((result < 0) || packet->ispublic) {
@@ -447,7 +447,7 @@ int dnscurve_reply_txt_query(event_entry_t *general_entry) {
 	// Now write the streamline header:
 	memcpy(fullnonce, packet->nonce, 12);
 	time = ev_now(event_default_loop);
-	misc_crypto_nonce(fullnonce + 12, &time, sizeof(time));
+	misc_crypto_nonce(fullnonce + 12);
 
 	result = dnscurve_get_shared_secret(packet);
 	if ((result < 0) || packet->ispublic) {

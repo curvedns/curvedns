@@ -47,8 +47,8 @@
 
 extern int global_urandom_fd;
 
-char hexpublic[65], hexprivate[65];
-uint8_t public[32], private[32], dnspublic[55];
+char hexpublic[65], hexprivate[65], hexnoncekey[33];
+uint8_t public[32], private[32], dnspublic[55], noncekey[16];
 
 // Implicitly called by crypto_box_keypair, urandom fd is file descriptor of /dev/urandom
 // Opening etc. is handled by misc_crypto_random_init()
@@ -109,6 +109,7 @@ int curvedns_env(char *path, char *name) {
 	printf("DNS public key:\n%s\n", dnspublic);
 	printf("Hex public key:\n%s\n", hexpublic);
 	printf("Hex secret key:\n%s\n", hexprivate);
+	printf("Hex nonce key:\n%s\n", hexnoncekey);
 	printf("\n");
 	printf("The private key was written to %s, so it can be used inside the CurveDNS environment.\n", fullpath);
 
@@ -125,6 +126,9 @@ int main(int argc, char *argv[]) {
 	
 	// Generate the actual keypair:
 	crypto_box_curve25519xsalsa20poly1305_keypair(public, private);
+
+        //Generate the nonce key
+        randombytes(noncekey, sizeof noncekey);
 
 	// The DNSCurve (base32)-encoding of the PUBLIC key:
 	memcpy(dnspublic, "uz5", 3);
@@ -144,15 +148,24 @@ int main(int argc, char *argv[]) {
 		perror("hex_encode");
 		return 1;
 	}
+
+        // The hex encoding of the NONCE key:
+        if (!misc_hex_encode(noncekey, 16, hexnoncekey, 32)) {
+                perror("hex_encode");
+                return 1;
+        }
+
 	
 	dnspublic[54] = 0;
 	hexpublic[64] = 0;
 	hexprivate[64] = 0;
+        hexnoncekey[32] = 0;
 	
 	if (argc == 1) {
 		printf("DNS public key:\t%s\n", dnspublic);
 		printf("Hex public key:\t%s\n", hexpublic);
 		printf("Hex secret key:\t%s\n", hexprivate);
+		printf("Hex nonce key:\t%s\n", hexnoncekey);
 	} else if (argc != 3) {
 		fprintf(stderr, "Usage: %s <path of CurveDNS installation> <authoritative name server name>\n", argv[0]);
 		return 1;

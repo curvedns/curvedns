@@ -52,6 +52,8 @@ extern int misc_getenv_ip(const char *, int, anysin_t *);
 extern int misc_getenv_int(const char *, int, int *);
 extern int misc_getenv_double(const char *, int, double *);
 extern int misc_getenv_key(const char *, int, uint8_t *);
+extern int misc_getenv_noncekey(const char *, int, uint8_t *);
+extern int misc_getenv_string(const char *, int, char **);
 
 extern int misc_char_hex(char, uint8_t *);
 extern int misc_hex_char(uint8_t, char *);
@@ -65,6 +67,7 @@ extern void misc_randombytes(uint8_t *, unsigned long long);
 
 extern int misc_crypto_random_init();
 extern unsigned int misc_crypto_random(unsigned int);
-extern void misc_crypto_nonce(uint8_t *, void *, int);
+extern void misc_crypto_nonce(uint8_t *);
+extern void misc_crypto_nonce_init(char *, unsigned char *, int);
 
 #endif /* MISC_H_ */
