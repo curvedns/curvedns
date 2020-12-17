@@ -198,16 +198,21 @@ void event_tcp_write_cb(struct ev_loop *loop, ev_io *w, int revent) {
 		ev_io_start(loop, &entry->read_watcher);
 		ev_timer_again(loop, &entry->timeout_watcher);
 	} else {
-		debug_log(DEBUG_INFO, "event_tcp_write_cb(): we have sent the entire packet towards the client, packetsize = %zu, listening again\n", entry->packetsize);
+		debug_log(DEBUG_INFO, "event_tcp_write_cb(): we have sent an entire packet towards the client, packetsize = %zu, listening for more\n", entry->packetsize);
 
 		ev_io_stop(loop, &entry->write_watcher);
 
-		// We are done sending info back to client. According to RFC, the client
-		// should close the connection, so wait for a read:
-		entry->state = EVENT_TCP_EXT_READING_INIT;
+		// We are done sending a DNS packet back to client.
+		// Turn back listening to the server for more DNS packets.
+		entry->state = EVENT_TCP_INT_READING_INIT;
 		entry->bufferat = 0;
 		entry->packetsize = 0;
 
+		
+		// TODO: at this point, either the client closes the connection or the server
+		// sends new data, so we should listen to both.
+		
+		ev_io_set(&entry->read_watcher, entry->intsock, EV_READ);
 		ev_io_start(loop, &entry->read_watcher);
 		ev_timer_again(loop, &entry->timeout_watcher);
 	}
@@ -215,7 +220,7 @@ void event_tcp_write_cb(struct ev_loop *loop, ev_io *w, int revent) {
 	return;
 
 wrong:
-	debug_log(DEBUG_WARN, "event_tcp_write_cb(): catched wrong during %s TCP connection\n", internal ? "internal" : "external");
+	debug_log(DEBUG_WARN, "event_tcp_write_cb(): caught wrong during %s TCP connection\n", internal ? "internal" : "external");
 	event_cleanup_entry(loop, general_entry);
 	return;
 }
@@ -257,6 +262,31 @@ void event_tcp_read_cb(struct ev_loop *loop, ev_io *w, int revent) {
 		} else {
 			debug_log(DEBUG_DEBUG, "event_tcp_read_cb(): EOF with recv() on TCP data (%s closed connection)\n",
 					internal ? "authoritative server" : "client");
+			
+			if(internal) {
+				// close the connection to the server:
+				ev_io_stop(loop, &entry->read_watcher);
+				ev_timer_stop(loop, &entry->timeout_watcher);
+				
+				ip_tcp_close(entry->intsock);
+				entry->intsock = -1;
+				
+				// This is not a wrong state, since we're waiting more and more packets from the server, while
+				// we also should listen to the client for connection closure. It is not implemented yet, so the
+				// server probably times out. // TODO
+				
+				// listen to the client for connection close:
+				entry->state = EVENT_TCP_EXT_READING_INIT;
+				entry->bufferat = 0;
+				entry->packetsize = 0;
+				
+				ev_io_set(&entry->write_watcher, entry->extsock, EV_WRITE);
+				ev_io_set(&entry->read_watcher, entry->extsock, EV_READ);
+				
+				ev_io_start(loop, &entry->read_watcher);
+				ev_timer_again(loop, &entry->timeout_watcher);
+				return;
+			}
 		}
 		goto wrong;
 	}
@@ -291,7 +321,7 @@ void event_tcp_read_cb(struct ev_loop *loop, ev_io *w, int revent) {
 		return;
 	}
 
-	debug_log(DEBUG_INFO, "event_tcp_read_cb(): received entire packet from %s, packetsize = %zu\n",
+	debug_log(DEBUG_INFO, "event_tcp_read_cb(): received an entire packet from %s, packetsize = %zu\n",
 			internal ? "server" : "client", entry->packetsize);
 
 	// Done with reading, so stop the watchers involved:
@@ -301,9 +331,7 @@ void event_tcp_read_cb(struct ev_loop *loop, ev_io *w, int revent) {
 		ev_timer_stop(loop, &entry->timeout_watcher);
 
 		// We received the answer from the authoritative name server,
-		// so close this connection:
-		ip_tcp_close(entry->intsock);
-		entry->intsock = -1;
+		// but do not close this connection, because there there may be more (RFC5936 §2.2)
 
 		// Let's see what kind of packet we are dealing with:
 		if (!dns_analyze_reply_query(general_entry)) {
