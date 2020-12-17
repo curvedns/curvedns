@@ -121,7 +121,7 @@ int dns_forward_query_udp(event_entry_t *general_entry) {
 	ev_io_start(event_default_loop, &entry->read_int_watcher);
 	ev_timer_again(event_default_loop, &entry->timeout_int_watcher);
 
-	debug_log(DEBUG_INFO, "dns_forward_query_udp(): forwarding query to authoritative name server (prev id = %d, new id = %d)\n",
+	debug_log(DEBUG_INFO, "dns_forward_query_udp(): forwarding query to authoritative name server (external id = %d, internal id = %d)\n",
 			(entry->dns.type == DNS_DNSCURVE_STREAMLINED || entry->dns.type == DNS_NON_DNSCURVE) ? entry->dns.srctxid : entry->dns.srcinsidetxid,
 			entry->dns.dsttxid);
 
@@ -164,7 +164,7 @@ int dns_forward_query_tcp(event_entry_t *general_entry) {
 	// XXX: do this platform safe (i.e. ntoh)
 	entry->dns.dsttxid = (entry->buffer[0] << 8) + entry->buffer[1];
 
-	debug_log(DEBUG_INFO, "dns_forward_query_tcp(): forwarding query to authoritative name server (prev id = %d, new id = %d)\n",
+	debug_log(DEBUG_INFO, "dns_forward_query_tcp(): forwarding query to authoritative name server (external id = %d, internal id = %d)\n",
 			entry->dns.srctxid, entry->dns.dsttxid);
 
 	return 1;
