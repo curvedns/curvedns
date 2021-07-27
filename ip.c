@@ -190,7 +190,6 @@ void ip_close() {
 int ip_bind_random(int sock) {
 	unsigned int i;
 	anysin_t addr;
-
 	memset(&addr, 0, sizeof(addr));
 
 	// See to what kind of socket we have to bind:
@@ -202,7 +201,7 @@ int ip_bind_random(int sock) {
 					&(global_source_address.sin6.sin6_addr),
 					sizeof(addr.sin6.sin6_addr));
 			}
-			addr.sin6.sin6_port = 1025 + misc_crypto_random(64510);
+			addr.sin6.sin6_port = htons(1025 + misc_crypto_random(64510));
 			if (bind(sock, (struct sockaddr *) &addr, sizeof(struct sockaddr_in6)) == 0)
 				return 1;
 		}
@@ -214,7 +213,7 @@ int ip_bind_random(int sock) {
 					&(global_source_address.sin.sin_addr),
 					sizeof(addr.sin.sin_addr));
 			}
-			addr.sin.sin_port = 1025 + misc_crypto_random(64510);
+			addr.sin.sin_port = htons(1025 + misc_crypto_random(64510));
 			if (bind(sock, (struct sockaddr *) &addr, sizeof(struct sockaddr_in)) == 0)
 				return 1;
 		}
